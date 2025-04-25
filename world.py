@@ -39,12 +39,12 @@ def save_gamestate():
 def new_fruit():
     x_fruit = (randrange(0, (globals.dis_width // globals.snake_box)) * globals.snake_box) + (globals.snake_box // 2)
     y_fruit = (randrange(0, (globals.dis_height // globals.snake_box)) * globals.snake_box) + (globals.snake_box // 2)
-    for f in fruitgroup:
-        if (x_fruit, y_fruit) == f.rect.center:
+    for fruit in fruitgroup:
+        if (x_fruit, y_fruit) == fruit.rect.center:
              return new_fruit()
     for xy in snake1.get_snake_body():
         x, y = xy.center
-        if (x + (globals.snake_box // 2)) != x_fruit or (y + (globals.snake_box // 2)) != y_fruit:
+        if x != x_fruit or y != y_fruit:
             continue
         return new_fruit()
     return x_fruit, y_fruit

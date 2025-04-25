@@ -17,8 +17,6 @@ class Snake(pygame.sprite.Sprite):
         self.rect = self.body[0]
     def move(self):
         for i in range(len(self.body)-1, 0, -1):
-            if i == 1:
-                print("test")
             self.body[i] = self.body[i-1].copy()
         x,y = self.body[0].center
         self.body[0].center = ((x+(self.direction[0] * globals.snake_box))% globals.dis_width, (y + (self.direction[1] * globals.snake_box)) % globals.dis_height)
