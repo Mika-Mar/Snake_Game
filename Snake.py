@@ -36,11 +36,10 @@ class Snake(pygame.sprite.Sprite):
     def _interpolated_body(self, alpha):
         rects = []
         for prev, curr in zip(self.prev_body, self.body):
-            dx = curr.centerx - prev.centerx
-            dy = curr.centery - prev.centery
-            rect = prev.copy()
-            rect.centerx = prev.centerx + dx * alpha
-            rect.centery = prev.centery + dy * alpha
+            rect = curr.copy()
+            cx = prev.centerx + (curr.centerx - prev.centerx) * alpha
+            cy = prev.centery + (curr.centery - prev.centery) * alpha
+            rect.center = (cx, cy)
             rects.append(rect)
         return rects
 
@@ -88,4 +87,5 @@ class Snake(pygame.sprite.Sprite):
         return self.body.copy()
     def set_snake_head(self, head):
         self.body[0].center = head
+        self.prev_body = [seg.copy() for seg in self.body]
 
