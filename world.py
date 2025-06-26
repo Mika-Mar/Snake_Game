@@ -27,6 +27,10 @@ dis = pygame.display.set_mode((globals.dis_width, globals.dis_height))
 snake1 = Snake.Snake()
 pygame.display.set_caption(f'Snake current score: {len(snake1.get_snake_body())}')
 clock = pygame.time.Clock()
+# display frames per second
+DISPLAY_FPS = 60
+# time between game updates in seconds
+UPDATE_INTERVAL = 1 / globals.snakespeed
 replay_data = []
 def save_gamestate():
     state ={
@@ -93,7 +97,10 @@ while running:
         pygame.draw.rect(dis, (150, 150, 150), start_button, 5)
         message(dis,"Spiel starten?",(0,255,255),start_button.center,50,"Times New Roman")
         pygame.display.update()
+    accumulator = 0
     while currentgamestate == Gamestate.GAME:
+        dt = clock.tick(DISPLAY_FPS) / 1000.0
+        accumulator += dt
         for event in pygame.event.get():
             if event.type == pygame.QUIT:
                 currentgamestate = Gamestate.GAME_OVER
@@ -101,49 +108,47 @@ while running:
                 if (event.key == pygame.K_LEFT or event.key == pygame.K_a) and current_event != pygame.K_RIGHT:
                     snake1.set_direction((-1, 0))
                     current_event = pygame.K_LEFT
-                    break
                 elif (event.key == pygame.K_RIGHT or event.key == pygame.K_d) and current_event != pygame.K_LEFT:
                     snake1.set_direction((1,0))
                     current_event = pygame.K_RIGHT
-                    break
                 elif (event.key == pygame.K_UP or event.key == pygame.K_w) and current_event != pygame.K_DOWN:
                     snake1.set_direction((0,-1))
                     current_event = pygame.K_UP
-                    break
                 elif (event.key == pygame.K_DOWN or event.key == pygame.K_s) and current_event != pygame.K_UP:
                     snake1.set_direction((0,1))
                     current_event = pygame.K_DOWN
-                    break
                 elif (event.key == pygame.K_SPACE or event.key == pygame.K_ESCAPE):
                     currentgamestate = Gamestate.PAUSED
+        while accumulator >= UPDATE_INTERVAL:
+            accumulator -= UPDATE_INTERVAL
+            hits = pygame.sprite.spritecollide(snake1, fruitgroup, dokill=False)
+            for h in hits:
+                fruitgroup.remove(h)
+                fruitgroup.add(Fruit.Fruit(new_fruit()))
+                snake1.grow()
+                pygame.display.set_caption(f'Snake current score: {len(snake1.get_snake_body())}')
+                pygame.mixer.Sound.play(sound1)
+            if snake1.get_snake_head().colliderect(port1):
+                snake1.set_snake_head(port2.get_position())
+                pygame.mixer.Sound.play(portalsound)
+            elif snake1.get_snake_head().colliderect(port2):
+                snake1.set_snake_head(port1.get_position())
+                pygame.mixer.Sound.play(portalsound)
+            save_gamestate()
+            snake1.move()
+            for i in range(1,len(snake1.get_snake_body())):
+                if snake1.get_snake_head().colliderect(snake1.get_snake_body()[i]):
+                    pygame.mixer.Sound.play(deathsound)
+                    current_event = None
+                    currentgamestate = Gamestate.GAME_OVER
+                    break
         dis.fill((100,100,100))
-        hits = pygame.sprite.spritecollide(snake1, fruitgroup, dokill=False)
-        for h in hits:
-            fruitgroup.remove(h)
-            fruitgroup.add(Fruit.Fruit(new_fruit()))
-            snake1.grow()
-            pygame.display.set_caption(f'Snake current score: {len(snake1.get_snake_body())}')
-            pygame.mixer.Sound.play(sound1)
-        if snake1.get_snake_head().colliderect(port1):
-            snake1.set_snake_head(port2.get_position())
-            pygame.mixer.Sound.play(portalsound)
-        elif snake1.get_snake_head().colliderect(port2):
-            snake1.set_snake_head(port1.get_position())
-            pygame.mixer.Sound.play(portalsound)
         draw_grid()
-        save_gamestate()
-        snake1.move()
         port1.draw(dis, pygame.time.get_ticks()//2)
         port2.draw(dis, pygame.time.get_ticks()//2)
         snake1.draw(dis)
         fruitgroup.draw(dis)
         pygame.display.flip()
-        clock.tick(globals.snakespeed)
-        for i in range(1,len(snake1.get_snake_body())):
-            if snake1.get_snake_head().colliderect(snake1.get_snake_body()[i]):
-                pygame.mixer.Sound.play(deathsound)
-                current_event = None
-                currentgamestate = Gamestate.GAME_OVER
     if currentgamestate == Gamestate.PAUSED:
         dis.fill((100, 100, 100))
         draw_grid()
