@@ -142,19 +142,21 @@ while running:
                     current_event = None
                     currentgamestate = Gamestate.GAME_OVER
                     break
+        alpha = accumulator / UPDATE_INTERVAL
         dis.fill((100,100,100))
         draw_grid()
         port1.draw(dis, pygame.time.get_ticks()//2)
         port2.draw(dis, pygame.time.get_ticks()//2)
-        snake1.draw(dis)
+        snake1.draw(dis, alpha)
         fruitgroup.draw(dis)
         pygame.display.flip()
     if currentgamestate == Gamestate.PAUSED:
+        alpha = accumulator / UPDATE_INTERVAL
         dis.fill((100, 100, 100))
         draw_grid()
         port1.draw(dis, pygame.time.get_ticks() // 2)
         port2.draw(dis, pygame.time.get_ticks() // 2)
-        snake1.draw(dis)
+        snake1.draw(dis, alpha)
         fruitgroup.draw(dis)
         draw_pause_overlay(dis, 128)
         pygame.display.flip()
