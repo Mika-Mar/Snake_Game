@@ -37,9 +37,23 @@ class Snake(pygame.sprite.Sprite):
         rects = []
         for prev, curr in zip(self.prev_body, self.body):
             rect = curr.copy()
-            cx = prev.centerx + (curr.centerx - prev.centerx) * alpha
-            cy = prev.centery + (curr.centery - prev.centery) * alpha
-            rect.center = (cx, cy)
+            px, py = prev.center
+            cx, cy = curr.center
+            dx = cx - px
+            dy = cy - py
+            if abs(dx) > globals.dis_width / 2:
+                if dx > 0:
+                    px += globals.dis_width
+                else:
+                    px -= globals.dis_width
+            if abs(dy) > globals.dis_height / 2:
+                if dy > 0:
+                    py += globals.dis_height
+                else:
+                    py -= globals.dis_height
+            ix = px + (cx - px) * alpha
+            iy = py + (cy - py) * alpha
+            rect.center = (ix % globals.dis_width, iy % globals.dis_height)
             rects.append(rect)
         return rects
 
