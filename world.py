@@ -59,7 +59,8 @@ fruit_text_box_active = False
 text = ''
 start_button = pygame.Rect(globals.dis_width // 4, globals.dis_height // 4, 2 * (globals.dis_width // 4), 2 * (globals.dis_height//4))
 currentgamestate = Gamestate.MAIN_MENU
-current_event = None
+# Prevent multiple direction changes within one game tick
+direction_changed = False
 running = True
 while running:
     while currentgamestate == Gamestate.FRUIT_MENU:
@@ -105,20 +106,21 @@ while running:
             if event.type == pygame.QUIT:
                 currentgamestate = Gamestate.GAME_OVER
             if event.type == pygame.KEYDOWN:
-                if (event.key == pygame.K_LEFT or event.key == pygame.K_a) and current_event != pygame.K_RIGHT:
-                    snake1.set_direction((-1, 0))
-                    current_event = pygame.K_LEFT
-                elif (event.key == pygame.K_RIGHT or event.key == pygame.K_d) and current_event != pygame.K_LEFT:
-                    snake1.set_direction((1,0))
-                    current_event = pygame.K_RIGHT
-                elif (event.key == pygame.K_UP or event.key == pygame.K_w) and current_event != pygame.K_DOWN:
-                    snake1.set_direction((0,-1))
-                    current_event = pygame.K_UP
-                elif (event.key == pygame.K_DOWN or event.key == pygame.K_s) and current_event != pygame.K_UP:
-                    snake1.set_direction((0,1))
-                    current_event = pygame.K_DOWN
-                elif (event.key == pygame.K_SPACE or event.key == pygame.K_ESCAPE):
+                new_dir = None
+                if event.key == pygame.K_LEFT or event.key == pygame.K_a:
+                    new_dir = (-1, 0)
+                elif event.key == pygame.K_RIGHT or event.key == pygame.K_d:
+                    new_dir = (1, 0)
+                elif event.key == pygame.K_UP or event.key == pygame.K_w:
+                    new_dir = (0, -1)
+                elif event.key == pygame.K_DOWN or event.key == pygame.K_s:
+                    new_dir = (0, 1)
+                elif event.key == pygame.K_SPACE or event.key == pygame.K_ESCAPE:
                     currentgamestate = Gamestate.PAUSED
+                if new_dir is not None and not direction_changed:
+                    if new_dir != (-snake1.direction[0], -snake1.direction[1]):
+                        snake1.set_direction(new_dir)
+                        direction_changed = True
         while accumulator >= UPDATE_INTERVAL:
             accumulator -= UPDATE_INTERVAL
             hits = pygame.sprite.spritecollide(snake1, fruitgroup, dokill=False)
@@ -136,10 +138,11 @@ while running:
                 pygame.mixer.Sound.play(portalsound)
             save_gamestate()
             snake1.move()
+            # allow direction change for the next tick
+            direction_changed = False
             for i in range(1,len(snake1.get_snake_body())):
                 if snake1.get_snake_head().colliderect(snake1.get_snake_body()[i]):
                     pygame.mixer.Sound.play(deathsound)
-                    current_event = None
                     currentgamestate = Gamestate.GAME_OVER
                     break
         alpha = accumulator / UPDATE_INTERVAL
