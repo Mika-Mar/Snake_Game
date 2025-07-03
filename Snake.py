@@ -21,16 +21,24 @@ class Snake(pygame.sprite.Sprite):
         )
         self.body = body if body else [pygame.Rect(0, 0, globals.snake_box, globals.snake_box)]
         self.prev_body = [seg.copy() for seg in self.body]
+        # store a history of head positions so body segments can follow the exact path
+        self.positions = [self.body[0].center] * (len(self.body) + 1)
         self.rect = self.body[0]
     def move(self):
         self.prev_body = [seg.copy() for seg in self.body]
-        for i in range(len(self.body) - 1, 0, -1):
-            self.body[i] = self.body[i - 1].copy()
-        x, y = self.body[0].center
-        self.body[0].center = (
-            (x + (self.direction[0] * globals.snake_box)) % globals.dis_width,
-            (y + (self.direction[1] * globals.snake_box)) % globals.dis_height,
+
+        head_x, head_y = self.positions[-1]
+        new_head = (
+            (head_x + (self.direction[0] * globals.snake_box)) % globals.dis_width,
+            (head_y + (self.direction[1] * globals.snake_box)) % globals.dis_height,
         )
+        self.positions.append(new_head)
+        while len(self.positions) > len(self.body) + 1:
+            self.positions.pop(0)
+
+        for i, rect in enumerate(self.body):
+            rect.center = self.positions[-1 - i]
+        self.rect = self.body[0]
     def set_direction(self, direction):
         self.direction = direction
     def _interpolated_body(self, alpha):
@@ -95,11 +103,18 @@ class Snake(pygame.sprite.Sprite):
     def grow(self):
         nextbody = self.body[len(self.body)-1].copy()
         self.body.append(nextbody)
+        # extend position history for the new segment
+        self.positions.insert(0, self.positions[0])
     def get_snake_head(self):
         return self.body[0]
     def get_snake_body(self):
         return self.body.copy()
     def set_snake_head(self, head):
-        self.body[0].center = head
         self.prev_body = [seg.copy() for seg in self.body]
+        self.positions.append(head)
+        # keep enough history so the body can smoothly follow
+        while len(self.positions) > len(self.body) + 1:
+            self.positions.pop(0)
+        for i, rect in enumerate(self.body):
+            rect.center = self.positions[-1 - i]
 
